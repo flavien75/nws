@@ -11,7 +11,10 @@ include('nws-favicon.php');
 
 function get_opensearch_content($url) {
     $html_page = file_get_contents($url);
-    if ($html_page === false) return false;
+    if ($html_page === false) {
+        echo 'Load error : '.$url.'<br />';
+        return false;
+    }
     
     $html_doc = new DOMDocument();
     $html_doc->strictErrorChecking = FALSE;
@@ -39,8 +42,10 @@ function get_opensearch_content($url) {
     }
     $xml_opensearch = file_get_contents($link_opensearch);
     
-    if ($xml_opensearch === false) return false;
-
+    if ($xml_opensearch === false) {
+        echo 'Not OpenSearch compliant <br />';
+        return false;
+    }
     $opensearch_desc = simplexml_load_string($xml_opensearch);
     if ($opensearch_desc === false) {
         echo "Can't load XML<br />\n";
@@ -57,6 +62,7 @@ function get_opensearch_content($url) {
     }
     if (isset($opensearch_desc->Image))     // sometime there
         $result['favicon'] = $opensearch_desc->Image;
+    return $result;
 }
 
 function gen_opensearch_div($url) {
@@ -139,7 +145,7 @@ function get_opensearch_div($url, $max_age) {
             $age = time() - filemtime($cache_file);
             $div_content = file_get_contents($cache_file) or die("Load / read error (cache)");
         } else {
-            die("Load / read error (cache)");
+            die("Load / read error");
         }
         
     }
