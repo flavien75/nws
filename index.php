@@ -36,6 +36,7 @@ $(document).ready(function() {
     var direction = null
     var ajax_loader = 'nws-load-feed.php'
     var feed_max_age = 3600;
+    var ajax_opensearch_loader = 'nws-load-opensearch.php'
     var ajax_spinner = '<img src="img/loading.gif" class="loading" alt="loading..." />'
 
     $('body').keyup(function(e) {
@@ -77,13 +78,22 @@ $(document).ready(function() {
 
     $('.reload').click(function(){
         var div_to_reload = $(this).parent()
-        var feed_url = encodeURIComponent(div_to_reload.attr('title'))
-        var feed_num_item = div_to_reload.attr('data-numItems')
-        var feed_img_mode = div_to_reload.attr('data-img')
-        var feed_photo_mode = div_to_reload.attr('data-photo')
-        div_to_reload.children('div.innerContainer')
-            .html(ajax_spinner)
-            .load(ajax_loader, "n=" + feed_num_item + "&i="+feed_img_mode+"&p="+feed_photo_mode+"&age="+feed_max_age+"&z=" + feed_url)
+        var container_type = div_to_reload.attr('data-type')
+        if (container_type == 'feed') {
+            var feed_url = encodeURIComponent(div_to_reload.attr('title'))
+            var feed_num_item = div_to_reload.attr('data-numItems')
+            var feed_img_mode = div_to_reload.attr('data-img')
+            var feed_photo_mode = div_to_reload.attr('data-photo')
+            div_to_reload.children('div.innerContainer')
+                .html(ajax_spinner)
+                .load(ajax_loader, "n=" + feed_num_item + "&i="+feed_img_mode+"&p="+feed_photo_mode+"&age="+feed_max_age+"&z=" + feed_url)
+        }
+        else if (container_type == 'OpenSearch') {
+            var search_url = encodeURIComponent(div_to_reload.attr('title'))
+            div_to_reload.children('div.innerContainer')
+                .html(ajax_spinner)
+                .load(ajax_opensearch_loader, "age="+feed_max_age+"&z=" + search_url)
+        }
     })
 
     $('.reload').trigger('click')
@@ -101,7 +111,15 @@ $img_modes=array('none'=> 'none', 'all'=> 'all', 'first'=> 'first');
 
 function outerContainer($u, $numItems, $img, $photo) {
     echo '
-        <div class="outerContainer" style="" title ="'.htmlspecialchars($u, ENT_QUOTES).'" data-numItems="'.$numItems.'" data-img="'.$img.'" data-photo="'.$photo.'">
+        <div class="outerContainer" style="" title ="'.htmlspecialchars($u, ENT_QUOTES).'" data-type="feed" data-numItems="'.$numItems.'" data-img="'.$img.'" data-photo="'.$photo.'">
+            <span class="reload" title="Reload '.htmlspecialchars($u).'">&#9889;</span>
+            <div class="innerContainer"></div>
+        </div>
+';
+}
+function outerContainerOpenSearch($u) {
+    echo '
+        <div class="outerContainerSearch" style="" title ="'.htmlspecialchars($u, ENT_QUOTES).'" data-type="OpenSearch">
             <span class="reload" title="Reload '.htmlspecialchars($u).'">&#9889;</span>
             <div class="innerContainer"></div>
         </div>
@@ -126,13 +144,28 @@ foreach ($urls->url as $url) {
     }
 
     if (isset($tab)) {
-        $myTabs[] = array('tab'=> (string) $tab, 'url'=> (string) $url, 'numItems'=> (string) $numItems , 'img'=> (string) $img, 'photo'=> (string) $photo);
+        $myTabs[] = array('tab'=> (string) $tab, 'type' => 'feed', 'url'=> (string) $url, 'numItems'=> (string) $numItems , 'img'=> (string) $img, 'photo'=> (string) $photo);
+    }
+}
+foreach ($urls->opensearch as $url) {
+    $myAttributes = $url->attributes();
+    $tab=NULL;
+    foreach($myAttributes as $attr => $val) {
+        if ($attr == 'tab')
+            $tab = $val;
+    }
+
+    if (isset($tab)) {
+        $myTabs[] = array('tab'=> (string) $tab, 'type' => 'opensearch', 'url'=> (string) $url);
     }
 }
 
-foreach($myTabs as $aRow)
-    $tabGroups[$aRow['tab']][] = array('url'=> $aRow['url'], 'numItems'=> $aRow['numItems'], 'img'=> $aRow['img'], 'photo'=> $aRow['photo']);
-
+foreach($myTabs as $aRow) {
+    if ($aRow['type'] == 'feed')
+        $tabGroups[$aRow['tab']][] = array('type' => 'feed', 'url'=> $aRow['url'], 'numItems'=> $aRow['numItems'], 'img'=> $aRow['img'], 'photo'=> $aRow['photo']);
+    elseif ($aRow['type'] == 'opensearch')
+        $tabGroups[$aRow['tab']][] = array('type' => 'opensearch', 'url'=> $aRow['url']);
+}
 echo '
     <ul class="tabulators">';
 
@@ -147,8 +180,14 @@ echo '
 foreach (array_keys($tabGroups) as $tabName) {
     echo '
     <div id="tab-'.$tabName.'">';
+        // 2 pass to get the search forms on top of page
         foreach ($tabGroups[$tabName] as $tabUrl)
-            outerContainer($tabUrl['url'],$tabUrl['numItems'],$tabUrl['img'],$tabUrl['photo']);
+            if ($tabUrl['type'] == 'opensearch')
+                outerContainerOpenSearch($tabUrl['url']);
+        
+        foreach ($tabGroups[$tabName] as $tabUrl)
+            if ($tabUrl['type'] == 'feed')
+                outerContainer($tabUrl['url'],$tabUrl['numItems'],$tabUrl['img'],$tabUrl['photo']);
     echo '
     </div>';
 }

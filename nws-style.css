@@ -44,6 +44,21 @@ h1 {
     margin:0 0 .2em 0;
 }
 
+.outerContainerSearch {
+    width:99%;
+    display:inline-block;
+    vertical-align:top;
+}
+.search {
+    vertical-align:top;
+    margin: 0 0 .5em 0;
+/*    margin: 0 25% .5em 25%;*/
+    font-size:.7em;
+    border: gray 1px solid;
+}
+.search:hover {
+    border: orange 1px solid;
+}
 /* Feed Item */
 
 .outerContainer {

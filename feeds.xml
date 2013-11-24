@@ -39,4 +39,6 @@
        <url tab="snd">http://feeds.feedburner.com/LinuxJournalAudioVideo/</url>
        Remember to encode & with $amp; in your feed's URI
   -->
+
+    <opensearch tab="tech">http://en.wikipedia.org</opensearch>
 </feeds>
