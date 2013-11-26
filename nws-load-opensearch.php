@@ -51,17 +51,47 @@ function get_opensearch_content($url) {
         echo "Can't load XML<br />\n";
         return false;
     }
-    $result['title']    = $opensearch_desc->ShortName;  // always there
-    $result['full_desc']= $opensearch_desc->Description;// always there
+    $result['ShortName']  = $opensearch_desc->ShortName;  // always there
+    $result['Description']= $opensearch_desc->Description;// always there
     foreach ($opensearch_desc->Url as $u) { // must appear one or more time
         $u_attr = $u->attributes();
         $type = $u_attr['type'];   // always there
         if ($type == 'text/html') {
-            $result['html_template'] = $u_attr['template'];
+            $result['url_html'] = $u_attr['template'];
         }
     }
     if (isset($opensearch_desc->Image))     // sometime there
         $result['favicon'] = $opensearch_desc->Image;
+    if (isset($result['url_html'])) {
+        $u = parse_url($result['url_html']);
+        $prefix = '';
+        $query_name = '';
+        $query_remaining = '';
+        if (isset($u['scheme'])) $prefix = $u['scheme'].'://';
+        if (isset($u['user'])) $prefix = $prefix.$u['user'];
+        if (isset($u['pass'])) $prefix = $prefix.':'.$u['pass'];
+        if (isset($u['user'])) $prefix = $prefix.'@';
+        if (isset($u['host'])) $prefix = $prefix.$u['host'];
+        if (isset($u['port'])) $prefix = $prefix.':'.$u['port'];
+        if (isset($u['path'])) $prefix = $prefix.$u['path'];
+        if (isset($u['query'])) {
+            $queries = explode('&', $u['query']);
+            foreach($queries as $query) {
+                $pos = strpos($query, "={searchTerms}");
+                if ($pos !== false) {
+                    $query_name = substr($query, 0, $pos);
+                }
+                else {
+                    if (!empty($query_remaining))
+                        $query_remaining = $query_remaining.'&'.$query;
+                    else
+                        $query_remaining = '?'.$query;
+                }
+            }
+        }
+        $result['url_prefix'] = $prefix.$query_remaining;
+        $result['url_qname'] = $query_name;
+    }
     return $result;
 }
 
@@ -69,28 +99,25 @@ function gen_opensearch_div($url) {
     $search_param = get_opensearch_content($url);
     if ($search_param === false) return false;
     
-    if (!isset($search_param['html_template'])) return false;
+    if (!isset($search_param['url_html'])) return false;
     
     if (!isset($search_param['favicon'])) {
-        $u = parse_url($search_param['html_template']);
+        $u = parse_url($search_param['url_html']);
         $search_param['favicon'] = get_favicon($u['host']); // not using cached version since we wil cache the result
     }
-    
-    // !!! TEMPORARY CODE !!!
+    // todo : change query remaining so that it goes into hidden fields (cleaner)
     $div_content = '
 <div class="search" title ="'.$url.'">
-    <!-- '.$search_param['html_template'].' -->
     <div class="feedTitle">
         <span class="favicon">
-            <a href="'.$url.'"><img src="'.$search_param['favicon'].'" /></a>&nbsp;<a href="'.$url.'" title="'.$search_param['title'].'">'.$search_param['title'].'</a>
+            <a href="'.$url.'"><img src="'.$search_param['favicon'].'" /></a>&nbsp;<a href="'.$url.'" title="'.$search_param['Description'].'">'.$search_param['ShortName'].'</a>
         </span>
     </div>
-    <form action="http://fr.wikipedia.org/w/index.php?title=Sp%C3%A9cial:Recherche" method="get">
-        <input type="text" name="search"> <input type="submit" value="Search!">
+    <form action="'.$search_param['url_prefix'].'" method="get">
+        <input type="text" name="'.$search_param['url_qname'].'"> <input type="submit" value="Search!">
     </form>
 </div>
 ';
-    // end of temporary code
     return $div_content;
 }
 
