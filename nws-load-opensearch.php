@@ -66,7 +66,6 @@ function get_opensearch_content($url) {
         $u = parse_url($result['url_html']);
         $prefix = '';
         $query_name = '';
-        $query_remaining = '';
         if (isset($u['scheme'])) $prefix = $u['scheme'].'://';
         if (isset($u['user'])) $prefix = $prefix.$u['user'];
         if (isset($u['pass'])) $prefix = $prefix.':'.$u['pass'];
@@ -77,20 +76,17 @@ function get_opensearch_content($url) {
         if (isset($u['query'])) {
             $queries = explode('&', $u['query']);
             foreach($queries as $query) {
-                $pos = strpos($query, "={searchTerms}");
-                if ($pos !== false) {
-                    $query_name = substr($query, 0, $pos);
-                }
-                else {
-                    if (!empty($query_remaining))
-                        $query_remaining = $query_remaining.'&'.$query;
-                    else
-                        $query_remaining = '?'.$query;
+                $query_parts = explode('=',$query);
+                if ($query_parts[1] == '{searchTerms}') {
+                    $query_name = $query_parts[0];
+                } else {
+                    $query_hidden[$query_parts[0]] = $query_parts[1];
                 }
             }
         }
-        $result['url_prefix'] = $prefix.$query_remaining;
+        $result['url_prefix'] = $prefix;
         $result['url_qname'] = $query_name;
+        if (isset($query_hidden)) $result['url_qhidden'] = $query_hidden;
     }
     return $result;
 }
@@ -105,7 +101,14 @@ function gen_opensearch_div($url) {
         $u = parse_url($search_param['url_html']);
         $search_param['favicon'] = get_favicon($u['host']); // not using cached version since we wil cache the result
     }
-    // todo : change query remaining so that it goes into hidden fields (cleaner)
+    $form_hidden_fields = '';
+    if (isset($search_param['url_qhidden'])) {
+        //$form_hidden_fields = '<!-- '.var_export($search_param['url_hidden'],true).' -->';
+        foreach ($search_param['url_qhidden'] as $query_hidden_name => $query_hidden_value)
+        {
+            $form_hidden_fields = $form_hidden_fields.'<input type ="hidden" name="'.$query_hidden_name.'" value="'.$query_hidden_value.'">';
+        }
+    }
     $div_content = '
 <div class="search" title ="'.$url.'">
     <div class="feedTitle">
@@ -114,7 +117,7 @@ function gen_opensearch_div($url) {
         </span>
     </div>
     <form action="'.$search_param['url_prefix'].'" method="get">
-        <input type="text" name="'.$search_param['url_qname'].'"> <input type="submit" value="Search!">
+        '.$form_hidden_fields.'<input type="text" name="'.$search_param['url_qname'].'"> <input type="submit" value="Search!">
     </form>
 </div>
 ';
