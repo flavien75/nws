@@ -117,7 +117,7 @@ function gen_opensearch_div($url) {
         </span>
     </div>
     <form action="'.$search_param['url_prefix'].'" method="get">
-        '.$form_hidden_fields.'<input type="text" name="'.$search_param['url_qname'].'"> <input type="submit" value="Search!">
+        '.$form_hidden_fields.'<input type="text" name="'.$search_param['url_qname'].'" class="search"> <input type="submit" value="Search!">
     </form>
 </div>
 ';
