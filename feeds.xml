@@ -17,7 +17,7 @@
 
   <url tab="sci" numItems="3">http://fe3.yql.bf1.yahoo.com/pipes/pipe.run?_id=feff1572a71d8e1d04465296edf5a537&amp;_render=rss</url>
   <url tab="sci">http://xkcd.com/rss.xml</url>
-  <url tab="sci" numItems="1">http://what-if.xkcd.com/feed.atom</url>
+  <url tab="sci" numItems="5" photo="false">http://what-if.xkcd.com/feed.atom</url>
 
   <url tab="img">http://allcreatures.tumblr.com/rss/</url>
   <url tab="img">http://freecabinporn.com/rss/</url>
@@ -41,4 +41,7 @@
   -->
 
     <opensearch tab="tech">http://en.wikipedia.org</opensearch>
+    <opensearch tab="search">https://duckduckgo.com</opensearch>
+    <opensearch tab="search">http://stackoverflow.com</opensearch>
+    <opensearch tab="search">http://www.php.net</opensearch>
 </feeds>

@@ -79,6 +79,9 @@ function get_opensearch_content($url) {
                 $query_parts = explode('=',$query);
                 if ($query_parts[1] == '{searchTerms}') {
                     $query_name = $query_parts[0];
+                } else if ((substr($query_parts[1],0,1)=='{')&&(substr($query_parts[1],-1,1)=='}')) {
+                    // another query that we can't handle
+                    // if (substr($query_parts[1],-2,1)=='?') // that parameter is optionnal
                 } else {
                     $query_hidden[$query_parts[0]] = $query_parts[1];
                 }
