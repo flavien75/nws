@@ -40,7 +40,10 @@ $(document).ready(function() {
     var ajax_spinner = '<img src="img/loading.gif" class="loading" alt="loading..." />'
 
     $('body').keyup(function(e) {
-
+        if ($(document.activeElement).attr("type") == "text" || $(document.activeElement).attr("type") == "textarea") {
+            // inside a textbox : ignore keyboard
+            return
+        }
         if (e.keyCode == 37 || e.keyCode == 82)
             direction = 'prev'
         else if (e.keyCode == 39 || e.keyCode == 84)
