@@ -272,8 +272,15 @@ function reparse($u, $numItems, $imgMode, $photoblog, $max_age) {
                     $ext = pathinfo($atomImg, PATHINFO_EXTENSION);
                     if ($ext == "mp3")
                         $img = '<a href="'.$atomImg.'"><span class="audio-note" title="Audio content">♫</span></a>';
-                    else
-                        $img = '<a href="'.$atomImg.'"><img class="feed" alt="'.$ext.' - atomImg" src="'.$atomImg.'" /></a>';
+                    else {
+                        list($width, $height) = getimagesize($atomImg);
+                        if (isset($width) && $width > 2) {
+                            $img = '<a href="'.$atomImg.'"><img class="feed" alt="'.$ext.' - atomImg" src="'.$atomImg.'" /></a>';
+                        }
+                        else {
+                            $img = '';
+                        }
+                    }
                 } elseif (!empty($mediaImg)) {
                     $img = '<a href="'.$mediaImg.'"><img class="feed" alt="media" src="'.$mediaImg.'" /></a>';
                 } elseif (!empty($imgSrc)) {
