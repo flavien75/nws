@@ -231,7 +231,10 @@ function reparse($u, $numItems, $imgMode, $photoblog, $max_age) {
                 // Image
 
                 $atomImg = $item->enclosure['url'];
-                $elseSrc = str_img_src(strip_tags($item->content, "<img>"));
+                if (isset($item->content))
+                    $elseSrc = str_img_src(strip_tags($item->content, "<img>"));
+                else if (isset($item->summary))
+                    $elseSrc = str_img_src(strip_tags($item->summary, "<img>"));
 
                 //Use that namespace
                 $namespaces = $item->getNameSpaces(true);
